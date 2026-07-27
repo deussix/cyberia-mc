@@ -474,21 +474,33 @@
         .meta-info { text-align: center; padding: 9px; font-size: 0.75em; color: #506a66; border-top: 1px solid rgba(78, 242, 189, 0.04); }
 
         @media (max-width: 600px) {
+    html, body {
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow-x: hidden !important; 
+        margin: 0;
+        padding: 0;
+    }
+
     body {
         min-height: 100vh;
         height: auto;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 20px 0 80px 0;
+        align-items: center; 
+        justify-content: flex-start; 
+        padding-top: 20px;
+        padding-bottom: 90px;
+        box-sizing: border-box;
     }
 
     .business-card {
-        width: 92%;
-        margin: 0 auto;
-        align-self: center;
+        width: 90% !important;
+        max-width: 420px;
+        margin-left: auto !important;
+        margin-right: auto !important; 
+        box-sizing: border-box;
     }
 
     .tab-content {
@@ -497,7 +509,7 @@
     }
 
     .logo-img {
-        width: 200px;
+        width: 180px;
     }
 
     .social-buttons {
@@ -508,13 +520,17 @@
     .social-btn {
         max-width: 100%;
         width: 100%;
+        box-sizing: border-box;
     }
 
     .floating-controls {
+        position: fixed;
         bottom: 16px;
-        left: 50%;
-        transform: translateX(-50%);
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        display: flex;
         gap: 16px;
+        z-index: 9999;
     }
 
     .floating-btn {
@@ -522,7 +538,6 @@
         height: 44px;
     }
 }
-        }
     </style>
 </head>
 <body>
