@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyberia</title>
+    <link rel="icon" type="image/png" href="logo-site.png">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-color: #040c10;
+            --text-color: #cbdedb;
+            --neon: #4ef2bd; /* Фирменный мятно-бирюзовый цвет Фос */
+            --neon-secondary: #22d3ee; /* Кристально-голубой оттенок самоцвета */
+            --neon-glow: rgba(78, 242, 189, 0.25);
+            --danger: #ff5555;
+            --card-bg: rgba(8, 22, 26, 0.75);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background: linear-gradient(135deg, #03080a 0%, #040c10 50%, #07161b 100%);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #constellations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow-1 {
+            position: absolute;
+            top: 10%;
+            left: 20%;
+            width: 420px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(78, 242, 189, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(80px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .bg-glow-2 {
+            position: absolute;
+            bottom: 10%;
+            right: 20%;
+            width: 440px;
+            height: 440px;
+            background: radial-gradient(circle, rgba(34, 211, 238, 0.12) 0%, rgba(0, 0, 0, 0) 70%);
+            filter: blur(100px);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Стандартный размер котов */
+        .floating-cat {
+            position: fixed;
+            width: 150px;
+            height: auto;
+            max-height: 180px;
+            object-fit: contain;
+            z-index: 2;
+            cursor: grab;
+            touch-action: none;
+            filter: drop-shadow(0 0 15px rgba(78, 242, 189, 0.4));
+            user-select: none;
+            will-change: transform, left, top, opacity;
+            opacity: 1;
+            transition: opacity 1.2s ease-out;
+        }
+
+        /* Увеличенный размер только для cat.png */
+        .floating-cat.large-cat {
+            width: 240px;
+            max-height: 280px;
+            filter: drop-shadow(0 0 20px rgba(78, 242, 189, 0.55));
+        }
+
+        .floating-cat.fade-out {
+            opacity: 0 !important;
+        }
+
+        .floating-cat:active {
+            cursor: grabbing;
+        }
+
+        @keyframes catJumpOut {
+            0% { transform: scale(0.1) rotate(-20deg); }
+            60% { transform: scale(1.15) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        /* Фиксированные кнопки контроля в левом нижнем углу */
+        .floating-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10000;
+        }
+
+        .floating-btn {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            background: rgba(8, 22, 26, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(78, 242, 189, 0.25);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s ease;
+            color: var(--neon);
+            outline: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            text-decoration: none;
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+            border-color: var(--neon);
+            box-shadow: 0 0 18px rgba(78, 242, 189, 0.4);
+            background: rgba(78, 242, 189, 0.12);
+            color: #ffffff;
+        }
+
+        .floating-btn.muted {
+            color: #666;
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .floating-btn.muted:hover {
+            color: var(--danger);
+            border-color: rgba(255, 85, 85, 0.4);
+            box-shadow: 0 0 15px rgba(255, 85, 85, 0.2);
+            background: rgba(255, 85, 85, 0.1);
+        }
+
+        .floating-btn svg {
+            transition: transform 0.3s ease;
+        }
+
+        /* Анимация карты */
+        .floating-btn.map-btn:hover svg {
+            transform: rotate(-8deg) scale(1.1);
+        }
+
+        /* Анимация динамика (звука) */
+        .floating-btn#soundToggle:hover svg {
+            animation: speakerVibe 0.4s ease-in-out forwards;
+        }
+
+        @keyframes speakerVibe {
+            0%   { transform: scale(1) rotate(0deg); }
+            25%  { transform: scale(1.2) rotate(-8deg); }
+            50%  { transform: scale(1.2) rotate(8deg); }
+            75%  { transform: scale(1.15) rotate(-3deg); }
+            100% { transform: scale(1.15) rotate(0deg); }
+        }
+
+        .business-card {
+            position: relative;
+            z-index: 10;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            max-width: 730px;
+            width: 90%;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7),
+                        inset 0 1px 1px rgba(78, 242, 189, 0.2),
+                        0 0 35px var(--neon-glow);
+            border: 1px solid rgba(78, 242, 189, 0.25);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 16px 24px 0;
+        }
+
+        .logo-img {
+            width: 260px;
+            max-width: 80%;
+            height: auto;
+            display: block;
+            margin: 0 auto -6px;
+            filter: drop-shadow(0 0 18px rgba(78, 242, 189, 0.35));
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.03);
+            filter: drop-shadow(0 0 28px rgba(78, 242, 189, 0.55));
+        }
+
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            padding: 6px 24px 14px;
+            border-bottom: 1px solid rgba(78, 242, 189, 0.1);
+        }
+
+        .nav-menu button {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid rgba(78, 242, 189, 0.12);
+            background: rgba(78, 242, 189, 0.02);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            font-size: 0.8em;
+            font-weight: 500;
+            font-family: 'Montserrat', sans-serif;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .nav-menu button.active, .nav-menu button:hover {
+            border-color: var(--neon);
+            color: var(--neon);
+            background: rgba(78, 242, 189, 0.08);
+            box-shadow: 0 0 12px rgba(78, 242, 189, 0.2);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 22px 32px;
+            max-height: 390px;
+            overflow-y: auto;
+            animation: fadeIn 0.3s ease;
+            position: relative;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tab-content::-webkit-scrollbar { width: 5px; }
+        .tab-content::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 10px; }
+        .tab-content::-webkit-scrollbar-thumb { background: rgba(78, 242, 189, 0.4); border-radius: 10px; }
+        .tab-content::-webkit-scrollbar-thumb:hover { background: rgba(78, 242, 189, 0.7); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content h2 {
+            color: #ffffff;
+            margin-top: 16px;
+            font-size: 1.1em;
+            border-left: 3px solid var(--neon);
+            padding-left: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .content h2:first-child { margin-top: 0; }
+        .content p { line-height: 1.6; margin-bottom: 12px; font-size: 0.9em; }
+
+        /* Стилизация внутренних гиперссылок контента */
+        .content a {
+            color: var(--neon);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            transition: color 0.2s ease, text-shadow 0.2s ease;
+            cursor: pointer;
+        }
+
+        .content a:hover {
+            color: #ffffff;
+            text-shadow: 0 0 8px var(--neon);
+        }
+
+        .features {
+            background: rgba(78, 242, 189, 0.02);
+            border: 1px solid rgba(78, 242, 189, 0.08);
+            padding: 14px 18px;
+            border-radius: 12px;
+            margin-top: 16px;
+        }
+
+        .features ul, .rules-list, .mod-list, .faq-list { list-style: none; padding: 0; margin: 0; }
+        .features li { margin-bottom: 6px; padding-left: 18px; position: relative; font-size: 0.9em; }
+        .features li::before { content: "•"; color: var(--neon); position: absolute; left: 0; font-size: 1.2em; line-height: 1; }
+
+        .rules-list li {
+            background: rgba(78, 242, 189, 0.02);
+            border: 1px solid rgba(78, 242, 189, 0.05);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.88em;
+            line-height: 1.45;
+        }
+
+        .rules-list li span { color: var(--neon); font-weight: 600; }
+        .rules-sublist { margin: 4px 0 0 16px; list-style: disc; color: #a3c2bd; }
+        .rules-sublist li { background: none; border: none; padding: 1px 0; margin-bottom: 2px; font-size: 0.85em; }
+
+        .plugin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .plugin-card {
+            background: rgba(78, 242, 189, 0.02);
+            border: 1px solid rgba(78, 242, 189, 0.06);
+            padding: 12px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .plugin-card h3 { margin: 0 0 4px 0; color: var(--neon); font-size: 0.92em; }
+        .plugin-card p { margin: 0 0 10px 0; font-size: 0.82em; line-height: 1.4; color: #9ab8b3; }
+        .plugin-link { align-self: flex-start; font-size: 0.75em; color: var(--neon); text-decoration: none; border-bottom: 1px dashed var(--neon); transition: opacity 0.2s ease; }
+        .plugin-link:hover { opacity: 0.8; }
+
+        .mod-box {
+            background: rgba(78, 242, 189, 0.02);
+            border: 1px solid rgba(78, 242, 189, 0.06);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 10px;
+            margin-bottom: 12px;
+        }
+
+        .mod-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(78, 242, 189, 0.04);
+            font-size: 0.86em;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.4;
+            color: #a3c2bd;
+        }
+
+        .mod-list li:last-child { border-bottom: none; }
+        .mod-icon { font-weight: bold; margin-top: 1px; flex-shrink: 0; font-size: 0.95em; }
+        .banned .mod-icon { color: var(--danger); }
+        .allowed .mod-icon { color: var(--neon); }
+
+        .mod-info { display: flex; flex-direction: column; gap: 2px; width: 100%; }
+        .mod-info strong { color: #ffffff; font-size: 0.9em; letter-spacing: 0.2px; }
+
+        .faq-list li {
+            background: rgba(78, 242, 189, 0.02);
+            border: 1px solid rgba(78, 242, 189, 0.06);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .faq-question { color: #ffffff; font-weight: 600; font-size: 0.9em; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .faq-question::before { content: "Q:"; color: var(--neon); font-weight: 700; }
+        .faq-answer { color: #a3c2bd; font-size: 0.85em; line-height: 1.5; margin: 0; padding-left: 20px; }
+
+        .action-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 24px 18px;
+            background: rgba(2, 6, 8, 0.4);
+            border-top: 1px solid rgba(78, 242, 189, 0.08);
+        }
+
+        .server-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.8em;
+            background: rgba(78, 242, 189, 0.03);
+            border: 1px solid rgba(78, 242, 189, 0.08);
+            padding: 5px 14px;
+            border-radius: 20px;
+            color: #a3c2bd;
+        }
+
+        .status-dot { width: 7px; height: 7px; border-radius: 50%; background-color: #777777; display: inline-block; transition: all 0.3s ease; }
+        .ip-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        
+        .ip-pill {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(78, 242, 189, 0.03);
+            border: 1px solid rgba(78, 242, 189, 0.3);
+            padding: 8px 26px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-decoration: none;
+        }
+
+        .ip-pill:hover {
+            border-color: var(--neon);
+            background: rgba(78, 242, 189, 0.08);
+            box-shadow: 0 0 16px rgba(78, 242, 189, 0.25);
+            transform: translateY(-2px);
+        }
+
+        .ip-address { font-size: 0.95em; color: #ffffff; font-weight: 600; letter-spacing: 1px; transition: color 0.3s ease; }
+        .ip-pill:hover .ip-address { color: var(--neon); }
+
+        .social-buttons { display: flex; gap: 10px; justify-content: center; width: 100%; flex-wrap: wrap; }
+        
+        .social-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(78, 242, 189, 0.03);
+            border: 1px solid rgba(78, 242, 189, 0.3);
+            padding: 7px 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+            text-decoration: none;
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.82em;
+            letter-spacing: 0.5px;
+            flex: 1;
+            min-width: 130px;
+            max-width: 200px;
+        }
+
+        .social-btn:hover {
+            border-color: var(--neon);
+            background: rgba(78, 242, 189, 0.08);
+            box-shadow: 0 0 16px rgba(78, 242, 189, 0.25);
+            transform: translateY(-2px);
+            color: var(--neon);
+        }
+
+        .ip-subtext { font-size: 0.72em; color: #6d8a85; letter-spacing: 0.5px; transition: all 0.3s ease; }
+        .meta-info { text-align: center; padding: 9px; font-size: 0.75em; color: #506a66; border-top: 1px solid rgba(78, 242, 189, 0.04); }
+
+        @media (max-width: 600px) {
+            body { overflow-y: auto; height: auto; padding: 15px 0; }
+            .tab-content { padding: 14px; max-height: 380px; }
+            .logo-img { width: 200px; }
+            .business-card { width: 95%; margin: 0 auto; }
+            .social-buttons { flex-direction: column; width: 100%; }
+            .social-btn { max-width: 100%; width: 100%; }
+            .floating-controls { bottom: 12px; left: 12px; }
+            .floating-btn { width: 38px; height: 38px; }
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="constellations"></canvas>
+
+    <div class="bg-glow-1"></div>
+    <div class="bg-glow-2"></div>
+
+    <!-- Левый нижний блок контроллеров: Звук + Карта -->
+    <div class="floating-controls">
+        <button id="soundToggle" class="floating-btn" onclick="toggleSound()" title="Включить/Выключить звук">
+            <svg id="soundOnIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+            <svg id="soundOffIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><line x1="23" y1="9" x2="17" y2="15"></line><line x1="17" y1="9" x2="23" y2="15"></line></svg>
+        </button>
+
+        <a href="https://map.cyberia.ru" target="_blank" class="floating-btn map-btn" title="Карта мира">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+        </a>
+    </div>
+
+    <div class="business-card">
+        <div class="header">
+            <img src="logo.png" alt="Cyberia Logo" class="logo-img" onclick="playEasterEgg('home', event)">
+        </div>
+
+        <div class="nav-menu">
+            <button class="active" onclick="switchTab('home', event)">Главная</button>
+            <button onclick="switchTab('rules', event)">Правила</button>
+            <button onclick="switchTab('plugins', event)">Плагины</button>
+            <button onclick="switchTab('mods', event)">Моды</button>
+            <button onclick="switchTab('faq', event)">FAQ</button>
+        </div>
+
+        <!-- 1. ГЛАВНАЯ СТРАНИЦА -->
+        <div id="home" class="tab-content active content">
+            <h2>💌 Привет! Добро пожаловать!</h2>
+            <p>Это ванильный лицензионный Minecraft-сервер с входом по whitelist и минимальным набором плагинов, которые не влияют на классический игровой опыт.</p>
+            
+            <h2>Почему стоит играть у нас?</h2>
+            <p>Cyberia — это уютное пространство, где можно отлично провести время и реализовать свои идеи в дружелюбном коллективе. Концепция вдохновлена закрытым сервером Cubeki.</p>
+            <p>У нас категорически не поощряется агрессивное поведение — мы не «анархо-проект». В первую очередь Cyberia — некоммерческий pet-project, созданный для того, чтобы объединить людей в небольшое и дружное комьюнити.</p>
+
+            <div class="features">
+                <h2 style="border-left: none; padding-left: 0; margin-bottom: 8px;">С чего начать?</h2>
+                <ul>
+                    <li>Ознакомьтесь с <a href="#" onclick="switchTab('rules', event)">правилами</a> и <a href="#" onclick="switchTab('mods', event)">списком запрещенных/разрешенных модификаций</a>.</li>
+                    <li>Заполните анкету в канале <a href="https://discord.gg/mTX6z2VYpc" target="_blank">#верификация</a> в Discord.</li>
+                    <li>В течение 24 часов вы получите ответ по вашей заявке.</li>
+                    <li>Если у вас остались вопросы, обязательно загляните в раздел <a href="#" onclick="switchTab('faq', event)">FAQ</a>.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 2. ПРАВИЛА -->
+        <div id="rules" class="tab-content content">
+            <h2>0. Общие положения</h2>
+            <ul class="rules-list">
+                <li><span>0.1.</span> Заходя на сервер, Discord-сервер или сайт проекта, игрок автоматически подтверждает свое полное согласие с данными правилами.</li>
+                <li><span>0.2.</span> Незнание правил не освобождает от ответственности.</li>
+                <li><span>0.3.</span> Администрация самостоятельно определяет меру и длительность наказания, руководствуясь здравым смыслом и тяжестью проступка.</li>
+                <li>
+                    <span>0.4.</span> <b>Обход правил.</b> Запрещены попытки обхода правил, завуалированные нарушения, а также намеренные действия «на грани дозволенного».
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Помните: попытка найти «лазейки» в формулировках правил не освобождает от ответственности. Если ваши действия приведут к созданию нового правила, вы будете первым, кто будет наказан за его нарушение.</small>
+                </li>
+                <li><span>0.5.</span> Самосуд запрещен. Все конфликты и нарушения решаются исключительно через систему тикетов / обращение к администрации.</li>
+            </ul>
+
+            <h2>1. Игровой процесс</h2>
+            <ul class="rules-list">
+                <li>
+                    <span>1.1.</span> <b>PVP по согласию.</b> Нанесение урона или убийство другого игрока допускается только при явном обоюдном согласии сторон <i>(исключение: официально объявленные ивенты или дуэли)</i>.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Всегда заранее уточняйте готовность игрока к бою в чате. Нападение без явного согласия расценивается как нарушение, даже если это задумывалось как шутка.</small>
+                </li>
+                <li>
+                    <span>1.2.</span> <b>Гриферство и воровство.</b> Запрещено уничтожение или изменение чужих построек, а также изъятие ресурсов из любых хранилищ (сундуков, печей, бочек) и ферм без разрешения владельца.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Чужие базы, сундуки и фермы неприкосновенны, даже если территория временно не обозначена табличкой или кажется заброшенной.</small>
+                </li>
+                <li><span>1.3.</span> <b>Посягательство на животных и сущностей.</b> Запрещено убийство или кража прирученных питомцев, жителей, именованных мобов, а также любого скота, находящихся на чужой территории или в загонах других игроков.</li>
+                <li>
+                    <span>1.4.</span> <b>Розыгрыши.</b> Допускаются только те шутки, которые не наносят неисправимого вреда чужому имуществу и могут быть легко устранены автором в короткий срок.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Более жесткие розыгрыши (включая использование ТНТ или разрушение блоков) допустимы исключительно между близкими друзьями, когда вы на 100% уверены, что участник понимает такой юмор, не против подобного и не останется в обиде.</small>
+                </li>
+                <li><span>1.5.</span> <b>Общественные зоны и Спавн.</b> Территория спавна и инфраструктура сервера (дороги, хаб в Незере, общественные фермы) являются общим достоянием. Любое строительство на спавне согласовывается общим голосованием.</li>
+                <li>
+                    <span>1.6.</span> <b>Вызов Иссушителя.</b> Разрешен в любом месте при условии, что это не создает угрозы занятым или нейтральным территориям и игрокам. Запрещается оставлять Иссушителя без контроля.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Рекомендуется призывать Иссушителя глубоко под землей или на крыше Незера. За любой ущерб от удравшего моба ответственность несет призвавший его игрок.</small>
+                </li>
+                <li><span>1.7.</span> <b>Намеренный вред территории.</b> Запрещено возводить лавакасты, заливать области лавой/водой, портить ландшафт бессмысленно расставленными блоками, взрывать территории и совершать любые подобные действия с целью испортить внешний вид мира.</li>
+            </ul>
+
+            <h2>2. Территории и Застройка</h2>
+            <ul class="rules-list">
+                <li>
+                    <span>2.1.</span> <b>Обозначение территории.</b> Территория считается занятой игроком, если:
+                    <ul class="rules-sublist">
+                        <li>Установлена табличка с ником владельца;</li>
+                        <li>Отправлен скриншот с координатами в специальный канал #территории.</li>
+                    </ul>
+                </li>
+                <li><span>2.2.</span> <b>Дистанция застройки.</b> Запрещено возводить постройки ближе <b>300 блоков</b> от границы территории другого игрока без его предварительного согласия.</li>
+                <li><span>2.4.</span> <b>Частная инфраструктура.</b> Использование чужих жителей, механизмов и ферм допускается только с разрешения их создателя.</li>
+            </ul>
+
+            <h2>3. Клиент, Моды и Техническая часть</h2>
+            <ul class="rules-list">
+                <li><span>3.1.</span> <b>Сторонний софт и Читы.</b> Запрещено использование чит-клиентов, модификаций и скриптов, дающих преимущество <i>(X-Ray, Baritone, Fly, Freecam, Killaura, автокликеры для AFK-фарма ресурсов и т.д.)</i>.</li>
+                <li>
+                    <span>3.2.</span> <b>Разрешенные моды.</b> Разрешены любые модификации, не дающие явного преимущества над другими игроками:
+                    <ul class="rules-sublist">
+                        <li><b>Оптимизация и графика:</b> Sodium, Lithium, Iris;</li>
+                        <li><b>Интерфейс:</b> MiniHUD, AppleSkin;</li>
+                        <li><b>Карты:</b> строго без отображения пещер, мобов и игроков;</li>
+                        <li><b>Связь и схемы:</b> Simple Voice Chat / Plasmo Voice, Litematica <i>(строго без функций авто-принтера / авто-строительства)</i>.</li>
+                    </ul>
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Если вы сомневаетесь, дает ли конкретный мод преимущество, уточните этот вопрос через тикет в Discord перед установкой.</small>
+                </li>
+                <li>
+                    <span>3.3.</span> <b>Багоюз и Дюпы.</b> Запрещено использование багов игры/сервера для получения предметов, опыта или преимущества <i>(исключение: дюп ТНТ для копалок, разрушение бедрока на крыше Незера)</i>.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Если вы случайно обнаружили критический баг или дюп, незамедлительно сообщите об этом администрации через тикет. Сокрытие бага приравнивается к его использованию.</small>
+                </li>
+                <li><span>3.4.</span> <b>Взлом сида.</b> Запрещен взлом сида мира любыми способами для получения преимущества над другими игроками.</li>
+                <li>
+                    <span>3.5.</span> <b>Аккаунты и RMT:</b>
+                    <ul class="rules-sublist">
+                        <li>Запрещена продажа/покупка внутриигровых ресурсов за реальные деньги (RMT).</li>
+                        <li>Запрещен мульти-аккаунтинг (использование твинков).</li>
+                        <li>При передаче аккаунта вся ответственность за совершенные действия лежит на его хозяине. Игра нескольких человек на одном аккаунте не рекомендована администрацией. О передаче аккаунта заранее сообщайте администрации.</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h2>4. Нагрузка на сервер (TPS)</h2>
+            <ul class="rules-list">
+                <li><span>4.1.</span> <b>Лаг-машины.</b> Запрещено создание механизмов, намеренно вызывающих падение производительности сервера (TPS).</li>
+                <li>
+                    <span>4.2.</span> <b>Скопление сущностей.</b> Запрещено избыточное скопление мобов, предметов или сущностей в одном чанке.
+                    <small style="display:block; margin-top: 6px; color: var(--neon);">💡 Своевременно забивайте скот, очищайте вольеры и используйте эффективные убивалки на фермах, чтобы не вызывать лаги и падение TPS сервера.</small>
+                </li>
+            </ul>
+
+            <h2>5. Правила Общения и Безопасности (Игровой чат / Voice / Discord)</h2>
+            <ul class="rules-list">
+                <li><span>5.1.</span> <b>Адекватность и Уважение.</b> Запрещены оскорбления игроков, провокации, травля (буллинг), спам, флуд, злоупотребление капсом/матом и деструктивное поведение.</li>
+                <li><span>5.2.</span> <b>Запрещенный контент.</b> Запрещена демонстрация дискриминационной/деструктивной символики, розжиг розни, публикация NSFW материалов и призывы к противоправным действиям.</li>
+                <li><span>5.3.</span> <b>Защита личных данных (Доксинг).</b> Запрещена публикация личной информации других игроков (ФИО, фото, контакты, соцсети) без их согласия.</li>
+                <li><span>5.4.</span> <b>Мошенничество и Реклама.</b> Запрещен фишинг, распространение вредоносных ссылок, мошенничество и несанкционированная реклама.</li>
+                <li><span>5.5.</span> <b>Политические дискуссии.</b> На сервере введен полный запрет на обсуждение политики, военных конфликтов и связанных с ними тем.</li>
+                <li><span>5.6.</span> <b>Голосовой чат.</b> Запрещено использование программ для изменения голоса с целью создания шума, воспроизведение громких/неприятных звуков или включение музыки без согласия присутствующих.</li>
+            </ul>
+        </div>
+
+        <!-- 3. ПЛАГИНЫ -->
+        <div id="plugins" class="tab-content content">
+            <h2>🛠️ Плагины</h2>
+            <p>Мы стремимся сохранить чистый ванильный геймплей, поэтому на сервере нет плагинов/модификаций, меняющих баланс или механики игры. Все установленные плагины служат только одной цели — обеспечивать безопасность, комфорт и стабильность сервера.</p>
+
+            <h2>🗺️ Карта мира</h2>
+            <div class="plugin-grid" style="grid-template-columns: 1fr;">
+                <div class="plugin-card">
+                    <h3>Dynmap</h3>
+                    <p>Интерактивная веб-карта мира в реальном времени. Изучайте постройки, рельеф и планируйте путешествия прямо в браузере.</p>
+                    <a href="https://map.cyberia.ru" target="_blank" class="plugin-link">Открыть карту мира →</a>
+                </div>
+            </div>
+
+            <h2>🎙️ Коммуникация</h2>
+            <div class="plugin-grid">
+                <div class="plugin-card">
+                    <h3>Plasmo Voice</h3>
+                    <p>Объемный позиционный голосовой чат прямо в игре.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>DiscordSRV</h3>
+                    <p>Полная интеграция сервера с нашим сообществом.</p>
+                </div>
+            </div>
+
+            <h2>⚡ Оптимизация и Стабильность</h2>
+            <div class="plugin-grid">
+                <div class="plugin-card">
+                    <h3>Ядро Paper</h3>
+                    <p>Высокопроизводительное ядро, обеспечивающее стабильные 20 TPS.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>Chunky</h3>
+                    <p>Мир предгенерируется заранее для комфортного исследования.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>Spark</h3>
+                    <p>Инструмент диагностики производительности в реальном времени.</p>
+                </div>
+            </div>
+
+            <h2>🎨 Интерфейс</h2>
+            <div class="plugin-grid">
+                <div class="plugin-card">
+                    <h3>TAB</h3>
+                    <p>Аккуратное и лаконичное меню игроков по клавише TAB.</p>
+                </div>
+            </div>
+
+            <h2>🛡️ Администрирование и Безопасность</h2>
+            <div class="plugin-grid">
+                <div class="plugin-card">
+                    <h3>CoreProtect</h3>
+                    <p>Абсолютная защита от гриферства с историей каждого блока.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>OpenInv</h3>
+                    <p>Просмотр и редактирование инвентарей игроков в реальном времени.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>LibertyBans</h3>
+                    <p>Современная система модерации.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>SuperVanish</h3>
+                    <p>Инструменты незаметного администрирования.</p>
+                </div>
+                <div class="plugin-card">
+                    <h3>LuckPerms</h3>
+                    <p>Гибкая система разграничения прав.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. МОДЫ -->
+        <div id="mods" class="tab-content content">
+            <h2>📦 Правила использования модификаций</h2>
+            <p><b>Главный принцип:</b> Разрешены <b>абсолютно любые</b> модификации, которые не вносят дисбаланс и не дают нечестного преимущества перед другими игроками.</p>
+
+            <h2>⛔ Запрещенные категории модификаций</h2>
+            <div class="mod-box">
+                <ul class="mod-list">
+                    <li class="banned">
+                        <span class="mod-icon">✖</span>
+                        <div class="mod-info">
+                            <strong>Читы и Чит-клиенты:</strong>
+                            <span>Любые чит-паки.</span>
+                        </div>
+                    </li>
+                    <li class="banned">
+                        <span class="mod-icon">✖</span>
+                        <div class="mod-info">
+                            <strong>X-Ray и аналоги:</strong>
+                            <span>Моды и ресурс-паки, показывающие руды или пещеры сквозь стены.</span>
+                        </div>
+                    </li>
+                    <li class="banned">
+                        <span class="mod-icon">✖</span>
+                        <div class="mod-info">
+                            <strong>Автоматизация:</strong>
+                            <span>Автокликеры, боты (Baritone), авто-тотемы и принтер в Litematica.</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+
+            <h2>✅ Разрешенные модификации</h2>
+            <div class="mod-box">
+                <ul class="mod-list">
+                    <li class="allowed">
+                        <span class="mod-icon">✔</span>
+                        <div class="mod-info">
+                            <strong>Оптимизация и графика:</strong>
+                            <span>Sodium, Lithium, Iris, OptiFine и др.</span>
+                        </div>
+                    </li>
+                    <li class="allowed">
+                        <span class="mod-icon">✔</span>
+                        <div class="mod-info">
+                            <strong>Интерфейс и HUD:</strong>
+                            <span>AppleSkin, Armor Status, MiniHUD, Shulker Box Tooltip, миникарты (без отображения пещер).</span>
+                        </div>
+                    </li>
+                    <li class="allowed">
+                        <span class="mod-icon">✔</span>
+                        <div class="mod-info">
+                            <strong>Социальные моды:</strong>
+                            <span>Plasmo Voice, 3D Skin Layers.</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- 5. FAQ -->
+        <div id="faq" class="tab-content content">
+            <h2>Часто задаваемые вопросы</h2>
+
+            <ul class="faq-list">
+                 <li>
+                    <div class="faq-question">Нужна ли лицензия Minecraft?</div>
+                    <p class="faq-answer">Да, вход на сервер осуществляется исключительно с лицензионных аккаунтов Java Edition.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Есть ли на сервере приваты блоков или территорий?</div>
+                    <p class="faq-answer">Приватов в привычном понимании у нас нет. Безопасность построек строится на честности игроков и использовании плагина CoreProtect — он фиксирует каждое действие, что позволяет быстро отслеживать и откатывать любой гриф или кражу.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Влияет ли финансовая поддержка (донат) на игровой процесс?</div>
+                    <p class="faq-answer">Нет. Проект некоммерческий, и цели заработать на нём нет. У нас нельзя купить предметы, ресурсы или игровые привилегии. Любая поддержка исключительно добровольная, и всё, что она даёт — это скромная ролевая плашка в Discord в знак благодарности.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Что делать, если меня загриферили или обокрали?</div>
+                    <p class="faq-answer">Не паникуйте и ничего не трогайте на месте происшествия. Создайте тикет в поддержке нашего Discord-сервера — мы быстро проверим логи через CoreProtect, восстановим постройки/вещи и накажем нарушителя.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Планируется ли вайп?</div>
+                    <p class="faq-answer">В идеале — нет. Мы ориентированы на долгую и комфортную игру на одной карте. При выходе крупных обновлений Minecraft мы просто расширяем границы мира. Если же сами игроки захотят начать с чистого листа, старая карта будет сохранена и выложена в открытый доступ для скачивания.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Есть ли ограничения на автоматические фермы и механизмы?</div>
+                    <p class="faq-answer">Разрешено создавать любые ванильные фермы и редстоун-механизмы, если они не создают критической нагрузки на сервер и не вызывают просадок TPS. Администрация может попросить оптимизировать постройку, если она сильно влияет на производительность.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Можно ли стать частью команды проекта (Supporter)?</div>
+                    <p class="faq-answer">На данный момент набор закрыт. Набор в команду откроется по мере роста сообщества.</p>
+                </li>
+                <li>
+                    <div class="faq-question">Будет ли проходка на сервер платной?</div>
+                    <p class="faq-answer">Нет, проходка бесплатная — попасть на сервер можно через анкету в Whitelist. Платный доступ не планируется. Этот вопрос может быть пересмотрен только при очень большом росте сообщества для покрытия расходов на мощное оборудование и защиты от вредителей. Но сейчас наша главная цель — собрать приятное ламповое комьюнити.</p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="action-block">
+            <div id="serverStatus" class="server-status">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Загрузка статуса...</span>
+            </div>
+
+            <div class="ip-wrapper">
+                <div class="ip-pill" onclick="copyIP()">
+                    <span class="ip-address">play.cyberia.ru</span>
+                </div>
+                <div class="ip-subtext" id="copyBadge">Нажмите, чтобы скопировать</div>
+            </div>
+
+            <div class="social-buttons">
+                <a href="https://t.me/cyberiamc" target="_blank" class="social-btn">Telegram</a>
+                <a href="https://discord.gg/mTX6z2VYpc" target="_blank" class="social-btn">Discord</a>
+            </div>
+        </div>
+
+        <div class="meta-info">
+            Версия: 1.20.x &bull; Дата открытия: 24.07.26 &bull; AI-assisted
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('constellations');
+        const ctx = canvas.getContext('2d');
+
+        let canvasWidth, canvasHeight;
+        let cubes = [];
+        let dustParticles = [];
+        let mouse = { x: null, y: null };
+
+        function resizeCanvas() {
+            canvasWidth = canvas.width = window.innerWidth;
+            canvasHeight = canvas.height = window.innerHeight;
+        }
+
+        class DustParticle {
+            constructor(isInitial = false) {
+                this.reset(isInitial);
+            }
+
+            reset(isInitial = false) {
+                this.x = Math.random() * canvasWidth;
+                this.y = isInitial ? Math.random() * canvasHeight : canvasHeight + 10;
+                this.size = Math.random() * 1.6 + 0.4;
+                this.vy = -(Math.random() * 0.2 + 0.08);
+                this.alpha = Math.random() * 0.45 + 0.15;
+            }
+
+            update() {
+                this.y += this.vy;
+                if (this.y < 0) {
+                    this.reset(false);
+                    this.y = canvasHeight + 10;
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.fillStyle = `rgba(78, 242, 189, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        class WireframeCube {
+            constructor(isInitial = false) {
+                this.reset(isInitial);
+            }
+
+            reset(isInitial = false) {
+                if (isInitial) {
+                    this.x = Math.random() * canvasWidth;
+                    this.y = Math.random() * canvasHeight;
+                    this.vx = (Math.random() - 0.5) * 0.3;
+                    this.vy = (Math.random() - 0.5) * 0.3;
+                } else {
+                    const edge = Math.floor(Math.random() * 4);
+                    if (edge === 0) { // сверху
+                        this.x = Math.random() * canvasWidth;
+                        this.y = -100;
+                        this.vx = (Math.random() - 0.5) * 0.3;
+                        this.vy = Math.random() * 0.25 + 0.05;
+                    } else if (edge === 1) { // снизу
+                        this.x = Math.random() * canvasWidth;
+                        this.y = canvasHeight + 100;
+                        this.vx = (Math.random() - 0.5) * 0.3;
+                        this.vy = -(Math.random() * 0.25 + 0.05);
+                    } else if (edge === 2) { // слева
+                        this.x = -100;
+                        this.y = Math.random() * canvasHeight;
+                        this.vx = Math.random() * 0.25 + 0.05;
+                        this.vy = (Math.random() - 0.5) * 0.3;
+                    } else { // справа
+                        this.x = canvasWidth + 100;
+                        this.y = Math.random() * canvasHeight;
+                        this.vx = -(Math.random() * 0.25 + 0.05);
+                        this.vy = (Math.random() - 0.5) * 0.3;
+                    }
+                }
+
+                this.z = Math.random() * 200 + 100;
+                this.size = Math.random() * 20 + 18;
+
+                this.rx = Math.random() * Math.PI * 2;
+                this.ry = Math.random() * Math.PI * 2;
+                this.rz = Math.random() * Math.PI * 2;
+
+                this.vrx = (Math.random() - 0.5) * 0.007;
+                this.vry = (Math.random() - 0.5) * 0.007;
+                this.vrz = (Math.random() - 0.5) * 0.007;
+
+                this.alpha = Math.random() * 0.35 + 0.25;
+            }
+
+            getCorner(index = 2) {
+                const nodes = [
+                    [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+                    [-1, -1,  1], [1, -1,  1], [1, 1,  1], [-1, 1,  1]
+                ];
+                const p = nodes[index];
+                const cx = Math.cos(this.rx), sx = Math.sin(this.rx);
+                const cy = Math.cos(this.ry), sy = Math.sin(this.ry);
+                const cz = Math.cos(this.rz), sz = Math.sin(this.rz);
+
+                let px = p[0] * this.size;
+                let py = p[1] * this.size;
+                let pz = p[2] * this.size;
+
+                let y1 = py * cx - pz * sx;
+                let z1 = py * sx + pz * cx;
+                let x1 = px;
+
+                let x2 = x1 * cy + z1 * sy;
+                let z2 = -x1 * sy + z1 * cy;
+                let y2 = y1;
+
+                let x3 = x2 * cz - y2 * sz;
+                let y3 = x2 * sz + y2 * cz;
+                let z3 = z2;
+
+                const fov = 400;
+                const scale = fov / (fov + z3 + this.z);
+                return { x: this.x + x3 * scale, y: this.y + y3 * scale };
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.rx += this.vrx;
+                this.ry += this.vry;
+                this.rz += this.vrz;
+
+                if (this.y < -150 || this.y > canvasHeight + 150 || this.x < -150 || this.x > canvasWidth + 150) {
+                    this.reset(false);
+                }
+            }
+
+            draw() {
+                const nodes = [
+                    [-1, -1, -1], [1, -1, -1], [1, 1, -1], [-1, 1, -1],
+                    [-1, -1,  1], [1, -1,  1], [1, 1,  1], [-1, 1,  1]
+                ];
+
+                const edges = [
+                    [0,1],[1,2],[2,3],[3,0],
+                    [4,5],[5,6],[6,7],[7,4],
+                    [0,4],[1,5],[2,6],[3,7]
+                ];
+
+                const cx = Math.cos(this.rx), sx = Math.sin(this.rx);
+                const cy = Math.cos(this.ry), sy = Math.sin(this.ry);
+                const cz = Math.cos(this.rz), sz = Math.sin(this.rz);
+
+                const project = (p) => {
+                    let px = p[0] * this.size;
+                    let py = p[1] * this.size;
+                    let pz = p[2] * this.size;
+
+                    let y1 = py * cx - pz * sx;
+                    let z1 = py * sx + pz * cx;
+                    let x1 = px;
+
+                    let x2 = x1 * cy + z1 * sy;
+                    let z2 = -x1 * sy + z1 * cy;
+                    let y2 = y1;
+
+                    let x3 = x2 * cz - y2 * sz;
+                    let y3 = x2 * sz + y2 * cz;
+                    let z3 = z2;
+
+                    const fov = 400;
+                    const scale = fov / (fov + z3 + this.z);
+                    return [this.x + x3 * scale, this.y + y3 * scale];
+                };
+
+                ctx.save();
+                ctx.strokeStyle = `rgba(78, 242, 189, ${this.alpha})`;
+                ctx.lineWidth = 1.2;
+                
+                const projectedNodes = nodes.map(p => project(p));
+                
+                ctx.beginPath();
+                for (let edge of edges) {
+                    const p1 = projectedNodes[edge[0]];
+                    const p2 = projectedNodes[edge[1]];
+                    ctx.moveTo(p1[0], p1[1]);
+                    ctx.lineTo(p2[0], p2[1]);
+                }
+                ctx.stroke();
+
+                ctx.restore();
+            }
+        }
+
+        function initConstellations() {
+            cubes = [];
+            dustParticles = [];
+            
+            const count = Math.floor((canvasWidth * canvasHeight) / 38000) + 10;
+            for (let i = 0; i < count; i++) {
+                cubes.push(new WireframeCube(true));
+            }
+
+            const dustCount = Math.floor((canvasWidth * canvasHeight) / 13000) + 45;
+            for (let i = 0; i < dustCount; i++) {
+                dustParticles.push(new DustParticle(true));
+            }
+        }
+
+        function animateConstellations() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
+            for (let i = 0; i < dustParticles.length; i++) {
+                dustParticles[i].update();
+                dustParticles[i].draw();
+            }
+
+            for (let i = 0; i < cubes.length; i++) {
+                cubes[i].update();
+                cubes[i].draw();
+            }
+
+            const connectDist = 180;
+            for (let i = 0; i < cubes.length; i++) {
+                const cornerI = cubes[i].getCorner(2);
+
+                for (let j = i + 1; j < cubes.length; j++) {
+                    const dx = cubes[i].x - cubes[j].x;
+                    const dy = cubes[i].y - cubes[j].y;
+                    const dist = Math.hypot(dx, dy);
+
+                    if (dist < connectDist) {
+                        const cornerJ = cubes[j].getCorner(2);
+                        const alpha = (1 - dist / connectDist) * 0.22;
+                        ctx.strokeStyle = `rgba(78, 242, 189, ${alpha})`;
+                        ctx.lineWidth = 1;
+                        ctx.beginPath();
+                        ctx.moveTo(cornerI.x, cornerI.y);
+                        ctx.lineTo(cornerJ.x, cornerJ.y);
+                        ctx.stroke();
+                    }
+                }
+
+                if (mouse.x !== null && mouse.y !== null) {
+                    const mdx = cubes[i].x - mouse.x;
+                    const mdy = cubes[i].y - mouse.y;
+                    const mdist = Math.hypot(mdx, mdy);
+                    const mouseConnectDist = 220;
+
+                    if (mdist < mouseConnectDist) {
+                        const alpha = (1 - mdist / mouseConnectDist) * 0.45;
+                        ctx.strokeStyle = `rgba(78, 242, 189, ${alpha})`;
+                        ctx.lineWidth = 1.2;
+                        ctx.beginPath();
+                        ctx.moveTo(cornerI.x, cornerI.y);
+                        ctx.lineTo(mouse.x, mouse.y);
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animateConstellations);
+        }
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            initConstellations();
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        });
+
+        window.addEventListener('mouseleave', () => {
+            mouse.x = null;
+            mouse.y = null;
+        });
+
+        let isMuted = false;
+
+        function toggleSound() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('soundToggle');
+            const onIcon = document.getElementById('soundOnIcon');
+            const offIcon = document.getElementById('soundOffIcon');
+
+            if (isMuted) {
+                btn.classList.add('muted');
+                onIcon.style.display = 'none';
+                offIcon.style.display = 'block';
+            } else {
+                btn.classList.remove('muted');
+                onIcon.style.display = 'block';
+                offIcon.style.display = 'none';
+            }
+        }
+
+        const tabTitles = {
+            'home': 'Cyberia',
+            'rules': 'Cyberia — Правила',
+            'plugins': 'Cyberia — Плагины',
+            'mods': 'Cyberia — Моды',
+            'faq': 'Cyberia — FAQ'
+        };
+
+        function switchTab(tabId, event) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            const buttons = document.querySelectorAll('.nav-menu button');
+            buttons.forEach(button => button.classList.remove('active'));
+
+            const targetContent = document.getElementById(tabId);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+
+            document.title = tabTitles[tabId] || 'Cyberia';
+
+            buttons.forEach(btn => {
+                const attr = btn.getAttribute('onclick') || '';
+                if (attr.includes(`'${tabId}'`) || attr.includes(`"${tabId}"`)) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        let activeCats = [];
+
+        function playEasterEgg(tabId, event) {
+            switchTab(tabId, event);
+
+            if (!isMuted) {
+                const audio = new Audio('meow.mp3');
+                audio.volume = 0.12;
+                audio.play().catch(error => console.log("Sound blocked"));
+            }
+
+            const isLuck = Math.random() < 1 / 250;
+            const catImages = ['cat.png', 'cat2.png', 'cat3.png', 'cat4.png'];
+            const randomImage = isLuck ? 'luck.png' : catImages[Math.floor(Math.random() * catImages.length)];
+
+            const cat = document.createElement('img');
+            cat.src = randomImage;
+            cat.classList.add('floating-cat');
+            
+            if (randomImage === 'cat.png') {
+                cat.classList.add('large-cat');
+            }
+
+            cat.style.animation = 'catJumpOut 0.7s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+
+            const rect = event.target.getBoundingClientRect();
+            const startX = rect.left + rect.width / 2 - 120;
+            const startY = rect.top + rect.height / 2 - 120;
+
+            cat.style.left = `${startX}px`;
+            cat.style.top = `${startY}px`;
+            document.body.appendChild(cat);
+
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 1.5 + 2.0;
+
+            const catData = {
+                element: cat,
+                x: startX, 
+                y: startY,
+                vx: Math.cos(angle) * speed, 
+                vy: Math.sin(angle) * speed,
+                isDragging: false,
+                currentRotation: 0,
+                targetX: startX, 
+                targetY: startY,
+                startX: 0, startY: 0,
+                prevMouseX: 0, prevMouseY: 0,
+                pointerDownX: 0, pointerDownY: 0,
+                removeTimer: null,
+                isLuck: isLuck,
+                isRemoving: false,
+                spawnTime: performance.now(),
+
+                remove() {
+                    if (this.isLuck || this.isRemoving) return;
+                    this.isRemoving = true;
+                    if (this.removeTimer) clearTimeout(this.removeTimer);
+                    
+                    cat.classList.add('fade-out');
+                    
+                    setTimeout(() => {
+                        if (cat.parentNode) cat.remove();
+                        activeCats = activeCats.filter(c => c !== this);
+                    }, 1200);
+                },
+
+                resetTimer() {
+                    if (this.isLuck || this.isRemoving) return;
+                    if (this.removeTimer) clearTimeout(this.removeTimer);
+                    this.removeTimer = setTimeout(() => this.remove(), 7000);
+                }
+            };
+
+            activeCats.push(catData);
+            catData.resetTimer();
+
+            cat.addEventListener('pointerdown', (e) => {
+                catData.isDragging = true;
+                catData.spawnTime = 0;
+                cat.style.animation = 'none';
+                if (catData.removeTimer) clearTimeout(catData.removeTimer);
+                
+                catData.startX = e.clientX - catData.x;
+                catData.startY = e.clientY - catData.y;
+                catData.prevMouseX = e.clientX;
+                catData.prevMouseY = e.clientY;
+                catData.pointerDownX = e.clientX;
+                catData.pointerDownY = e.clientY;
+                cat.setPointerCapture(e.pointerId);
+                e.preventDefault();
+            });
+
+            cat.addEventListener('pointermove', (e) => {
+                if (!catData.isDragging) return;
+                catData.targetX = e.clientX - catData.startX;
+                catData.targetY = e.clientY - catData.startY;
+                
+                catData.vx = (e.clientX - catData.prevMouseX) * 0.45 + catData.vx * 0.55;
+                catData.vy = (e.clientY - catData.prevMouseY) * 0.45 + catData.vy * 0.55;
+                catData.prevMouseX = e.clientX;
+                catData.prevMouseY = e.clientY;
+            });
+
+            cat.addEventListener('pointerup', (e) => {
+                if (!catData.isDragging) return;
+                catData.isDragging = false;
+                cat.releasePointerCapture(e.pointerId);
+
+                const catW = cat.offsetWidth || 150;
+                const catH = cat.offsetHeight || 150;
+                const maxX = window.innerWidth - catW;
+                const maxY = window.innerHeight - catH;
+
+                if (catData.x >= maxX - 5) {
+                    catData.vx = -Math.max(Math.abs(catData.vx), 3.5);
+                }
+                if (catData.y >= maxY - 5) {
+                    catData.vy = -Math.max(Math.abs(catData.vy), 3.5);
+                }
+                if (catData.x <= 5) {
+                    catData.vx = Math.max(Math.abs(catData.vx), 3.5);
+                }
+                if (catData.y <= 5) {
+                    catData.vy = Math.max(Math.abs(catData.vy), 3.5);
+                }
+
+                const distFromStart = Math.hypot(e.clientX - catData.pointerDownX, e.clientY - catData.pointerDownY);
+                if (distFromStart < 5 && catData.isLuck) {
+                    window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+                    return;
+                }
+
+                catData.resetTimer();
+            });
+        }
+
+        function globalPhysicsLoop(currentTime) {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            for (let i = 0; i < activeCats.length; i++) {
+                let cat = activeCats[i];
+
+                if (cat.isDragging) {
+                    cat.x += (cat.targetX - cat.x) * 0.35;
+                    cat.y += (cat.targetY - cat.y) * 0.35;
+                } else {
+                    cat.x += cat.vx;
+                    cat.y += cat.vy;
+                    
+                    cat.vx *= 0.998;
+                    cat.vy *= 0.998;
+
+                    const curSpeed = Math.hypot(cat.vx, cat.vy);
+                    if (curSpeed > 4.5) {
+                        cat.vx = (cat.vx / curSpeed) * 4.5;
+                        cat.vy = (cat.vy / curSpeed) * 4.5;
+                    } else if (curSpeed < 1.0 && curSpeed > 0.05) {
+                        cat.vx = (cat.vx / curSpeed) * 1.0;
+                        cat.vy = (cat.vy / curSpeed) * 1.0;
+                    }
+                }
+            }
+
+            const ITERATIONS = 2;
+            for (let iter = 0; iter < ITERATIONS; iter++) {
+                for (let i = 0; i < activeCats.length; i++) {
+                    for (let j = i + 1; j < activeCats.length; j++) {
+                        let c1 = activeCats[i];
+                        let c2 = activeCats[j];
+                        
+                        if ((currentTime - c1.spawnTime < 300) || (currentTime - c2.spawnTime < 300)) continue;
+
+                        let w1 = c1.element.offsetWidth || 150;
+                        let w2 = c2.element.offsetWidth || 150;
+                        let r1 = w1 / 2.2;
+                        let r2 = w2 / 2.2;
+
+                        let dx = (c2.x + r2) - (c1.x + r1);
+                        let dy = (c2.y + r2) - (c1.y + r1);
+                        let dist = Math.sqrt(dx * dx + dy * dy);
+                        let minDist = r1 + r2;
+
+                        if (dist < minDist) {
+                            if (dist === 0) { dx = 1; dy = 0; dist = 1; }
+                            let overlap = minDist - dist;
+                            let nx = dx / dist;
+                            let ny = dy / dist;
+
+                            if (c1.isDragging && !c2.isDragging) {
+                                c2.x += nx * overlap;
+                                c2.y += ny * overlap;
+                                c2.vx = c1.vx * 1.1 + nx * 2;
+                                c2.vy = c1.vy * 1.1 + ny * 2;
+                            } else if (!c1.isDragging && c2.isDragging) {
+                                c1.x -= nx * overlap;
+                                c1.y -= ny * overlap;
+                                c1.vx = c2.vx * 1.1 - nx * 2;
+                                c1.vy = c2.vy * 1.1 - ny * 2;
+                            } else if (!c1.isDragging && !c2.isDragging) {
+                                c1.x -= nx * overlap * 0.5;
+                                c1.y -= ny * overlap * 0.5;
+                                c2.x += nx * overlap * 0.5;
+                                c2.y += ny * overlap * 0.5;
+
+                                let kx = c1.vx - c2.vx;
+                                let ky = c1.vy - c2.vy;
+                                let p = (nx * kx + ny * ky);
+                                
+                                const bounceForce = 0.35;
+                                c1.vx -= (nx * bounceForce + p * 0.35);
+                                c1.vy -= (ny * bounceForce + p * 0.35);
+                                c2.vx += (nx * bounceForce + p * 0.35);
+                                c2.vy += (ny * bounceForce + p * 0.35);
+                            } else {
+                                c1.x -= nx * overlap * 0.5;
+                                c1.y -= ny * overlap * 0.5;
+                                c2.x += nx * overlap * 0.5;
+                                c2.y += ny * overlap * 0.5;
+                            }
+                        }
+                    }
+                }
+
+                for (let i = 0; i < activeCats.length; i++) {
+                    let cat = activeCats[i];
+                    if (currentTime - cat.spawnTime < 200) continue;
+
+                    const catW = cat.element.offsetWidth || 150;
+                    const catH = cat.element.offsetHeight || 150;
+                    const maxX = width - catW;
+                    const maxY = height - catH;
+                    const wallBounce = 0.95;
+
+                    if (cat.x < 0) { 
+                        cat.x = 0; 
+                        cat.vx = Math.abs(cat.vx) * wallBounce; 
+                    } else if (cat.x > maxX) { 
+                        cat.x = maxX; 
+                        cat.vx = -Math.abs(cat.vx) * wallBounce; 
+                    }
+
+                    if (cat.y < 0) { 
+                        cat.y = 0; 
+                        cat.vy = Math.abs(cat.vy) * wallBounce; 
+                    } else if (cat.y > maxY) { 
+                        cat.y = maxY; 
+                        cat.vy = -Math.abs(cat.vy) * wallBounce; 
+                    }
+                }
+            }
+
+            for (let i = 0; i < activeCats.length; i++) {
+                let cat = activeCats[i];
+                cat.element.style.left = `${cat.x}px`;
+                cat.element.style.top = `${cat.y}px`;
+                
+                let targetRotation = cat.vx * 1.5;
+                cat.currentRotation += (targetRotation - cat.currentRotation) * 0.1;
+                
+                if (!cat.isRemoving && currentTime - cat.spawnTime > 700) {
+                    cat.element.style.transform = `rotate(${cat.currentRotation}deg) ${cat.isDragging ? 'scale(1.08)' : 'scale(1)'}`;
+                }
+            }
+
+            requestAnimationFrame(globalPhysicsLoop);
+        }
+
+        function copyIP() {
+            navigator.clipboard.writeText("play.cyberia.ru").then(() => {
+                const badge = document.getElementById("copyBadge");
+                badge.innerText = "Скопировано!";
+                badge.style.color = "var(--neon)";
+                setTimeout(() => { badge.innerText = "Нажмите, чтобы скопировать"; badge.style.color = "#6d8a85"; }, 2000);
+            });
+        }
+
+        async function checkServerStatus() {
+            const dot = document.getElementById("statusDot");
+            const text = document.getElementById("statusText");
+            try {
+                const response = await fetch('https://api.mcsrvstat.us/3/play.cyberia.ru');
+                const data = await response.json();
+                if (data.online) {
+                    dot.style.backgroundColor = "var(--neon)";
+                    text.innerHTML = `Онлайн: <b>${data.players.online}/${data.players.max}</b>`;
+                } else {
+                    dot.style.backgroundColor = "var(--danger)";
+                    text.innerText = `Оффлайн`;
+                }
+            } catch (e) { text.innerText = `Статус недоступен`; }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkServerStatus();
+            resizeCanvas();
+            initConstellations();
+            requestAnimationFrame(animateConstellations);
+            requestAnimationFrame(globalPhysicsLoop);
+        });
+    </script>
+</body>
+</html>
