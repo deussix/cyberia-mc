@@ -491,7 +491,7 @@
         align-items: center; 
         justify-content: flex-start; 
         padding-top: 20px;
-        padding-bottom: 90px;
+        padding-bottom: 30px;
         box-sizing: border-box;
     }
 
@@ -523,15 +523,17 @@
         box-sizing: border-box;
     }
 
-    .floating-controls {
-        position: fixed;
-        bottom: 16px;
-        left: 50% !important;
-        transform: translateX(-50%) !important;
-        display: flex;
-        gap: 16px;
-        z-index: 9999;
-    }
+   .floating-controls {
+        position: relative !important; 
+        bottom: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 20px auto 10px auto !important; 
+        display: flex !important;
+        justify-content: center !important;
+        gap: 16px;
+        z-index: 10;
+    }
 
     .floating-btn {
         width: 44px;
