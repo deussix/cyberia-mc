@@ -902,10 +902,23 @@
         let dustParticles = [];
         let mouse = { x: null, y: null };
 
-        function resizeCanvas() {
-            canvasWidth = canvas.width = window.innerWidth;
-            canvasHeight = canvas.height = window.innerHeight;
-        }
+        let lastWidth = window.innerWidth;
+
+function resizeCanvas() {
+   
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    
+    canvasWidth = window.innerWidth;
+    canvasHeight = window.innerHeight;
+
+    canvas.style.width = canvasWidth + 'px';
+    canvas.style.height = canvasHeight + 'px';
+
+    canvas.width = canvasWidth * dpr;
+    canvas.height = canvasHeight * dpr;
+
+    ctx.scale(dpr, dpr);
+}
 
         class DustParticle {
             constructor(isInitial = false) {
@@ -1159,9 +1172,14 @@
         }
 
         window.addEventListener('resize', () => {
-            resizeCanvas();
-            initConstellations();
-        });
+    const currentWidth = window.innerWidth;
+    resizeCanvas();
+
+    if (currentWidth !== lastWidth) {
+        lastWidth = currentWidth;
+        initConstellations();
+    }
+});
 
         window.addEventListener('mousemove', (e) => {
             mouse.x = e.clientX;
